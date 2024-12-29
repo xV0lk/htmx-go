@@ -60,9 +60,12 @@ func main() {
 		sessionStore = db.NewPsSessionStore(psqlStore)
 		pwResetStore = db.NewPsPwResetStore(psqlStore)
 		userStore    = db.NewUserStore(authStore, sessionStore, pwResetStore)
+		clientStore  = db.NewPsclientStore(psqlStore)
+
 		// handlers
-		tasksHandler = api.NewTasksHandler(taskStore, decoder)
-		authHandler  = api.NewAuthHandler(userStore, decoder, emailService)
+		tasksHandler  = api.NewTasksHandler(taskStore, decoder)
+		authHandler   = api.NewAuthHandler(userStore, decoder, emailService)
+		clientHandler = api.Newclienthandler(clientStore, decoder)
 		// Connection
 		r = chi.NewRouter()
 	)
@@ -92,6 +95,16 @@ func main() {
 			r.Delete("/{id}", tasksHandler.HandleDeleteTask)
 			r.Get("/{id}/edit", tasksHandler.HandleEditTask)
 			r.Put("/{id}", tasksHandler.HandlePutTask)
+		})
+
+		r.Route("/client", func(r chi.Router) {
+
+			r.Get("/{id}", clientHandler.GetClient)
+			r.Get("/", clientHandler.GetClients)
+			r.Post("/", clientHandler.CreateNewClient)
+			r.Delete("/{id}", clientHandler.DeleteClient)
+			r.Put("/", clientHandler.UpdateClients)
+
 		})
 	})
 
