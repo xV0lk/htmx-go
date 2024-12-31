@@ -7,7 +7,7 @@ CREATE TABLE
         phone VARCHAR(15) NOT NULL,
         email TEXT NOT NULL,
         notifications BOOLEAN NOT NULL DEFAULT TRUE,
-        studio_id VARCHAR(20) NOT NULL REFERENCES studios(id) ON DELETE DO NOTHING,
+        studio_id VARCHAR(20) NOT NULL REFERENCES studios(id) ON DELETE DO NOTHING
       
 
     );
