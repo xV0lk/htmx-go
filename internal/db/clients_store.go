@@ -34,10 +34,10 @@ func (s *PsclientStore) Close() {
 
 func (s *PsclientStore) CreateClient(ctx context.Context, client *models.Client) (*models.Client, error) {
 
-	query := `INSERT INTO clients (id, name, phone, email, notifications, studioId)
-	VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	query := `INSERT INTO clients (name, phone, email, notifications, studioId)
+	VALUES ($1, $2, $3, $4, $5)`
 
-	err := s.db.QueryRow(ctx, query, client.ID, client.Name, client.Phone, client.Email, client.Notifications, client.StudioID)
+	err := s.db.QueryRow(ctx, query, client.Name, client.Phone, client.Email, client.Notifications, client.StudioID)
 
 	if err != nil {
 		fmt.Println("Inserting Error")
