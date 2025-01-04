@@ -30,9 +30,7 @@ func Newclienthandler(store db.ClientStore, decoder *schema.Decoder) *ClientHand
 func writeJSONResponse(w http.ResponseWriter, status int, client *models.Client) {
 
 	w.Header().Set("Content-type", "application/json")
-
 	w.WriteHeader(status)
-
 	json.NewEncoder(w).Encode(client)
 
 }
@@ -40,32 +38,20 @@ func writeJSONResponse(w http.ResponseWriter, status int, client *models.Client)
 func validateClient(client *models.Client) error {
 
 	if client.Email == "" {
-
 		return fmt.Errorf("el campo no puede estar vacio")
-
 	} else if !strings.ContainsAny(client.Email, "@") {
-
 		return fmt.Errorf("email no valido")
 	}
-
 	if client.Name == "" {
-
 		return fmt.Errorf("el campo no puede estar vacio")
-
 	} else if strings.IndexFunc(client.Name, unicode.IsDigit) != -1 || strings.IndexFunc(client.Name, unicode.IsSymbol) != -1 {
-
 		return fmt.Errorf("el campo no puede tener numeros o caracteres especiales")
-
 	}
 
 	if client.Phone == "" {
-
 		return fmt.Errorf("el campo no puede estar vacio")
-
 	} else if strings.IndexFunc(client.Phone, unicode.IsLetter) != -1 || strings.IndexFunc(client.Phone, unicode.IsSymbol) != -1 {
-
 		return fmt.Errorf("el campo no puede tener letras o caracteres especiales")
-
 	}
 
 	return nil
@@ -73,21 +59,15 @@ func validateClient(client *models.Client) error {
 
 func validateClients(client *models.Client) error {
 
-	if !strings.ContainsAny(client.Email, "@") {
-
+	if !strings.ContainsAny(client.Email, "@") && client.Email != "" {
 		return fmt.Errorf("email no valido")
 	}
-
 	if strings.IndexFunc(client.Name, unicode.IsDigit) != -1 || strings.IndexFunc(client.Name, unicode.IsSymbol) != -1 {
-
 		return fmt.Errorf("el campo no puede tener numeros o caracteres especiales")
 
 	}
-
 	if strings.IndexFunc(client.Phone, unicode.IsLetter) != -1 || strings.IndexFunc(client.Phone, unicode.IsSymbol) != -1 {
-
 		return fmt.Errorf("el campo no puede tener letras o caracteres especiales")
-
 	}
 
 	return nil
@@ -100,31 +80,21 @@ func (c *ClientHandler) CreateNewClient(w http.ResponseWriter, r *http.Request) 
 	ctx := r.Context()
 
 	err := json.NewDecoder(r.Body).Decode(newClient)
-
 	if err != nil {
-
 		http.Error(w, "Data ingresada no es valida", http.StatusBadRequest)
-
 		return
-
 	}
 
 	err = validateClient(newClient)
-
 	if err != nil {
-
 		http.Error(w, err.Error(), http.StatusBadRequest)
-
 		return
-
 	}
 
 	newClient, err = c.ClientStore.CreateClient(ctx, newClient)
-
 	if err != nil {
-
-		http.Error(w, "Error al crear cliente", http.StatusBadRequest)
-
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	writeJSONResponse(w, http.StatusOK, newClient)
@@ -136,13 +106,9 @@ func (c *ClientHandler) CreateNewClient(w http.ResponseWriter, r *http.Request) 
 func (c *ClientHandler) GetClient(w http.ResponseWriter, r *http.Request) {
 
 	cid := chi.URLParam(r, "id")
-
 	id, err := strconv.Atoi(cid)
-
 	if err != nil {
-
 		http.Error(w, "id no valido", http.StatusBadRequest)
-
 	}
 
 	client := &models.Client{}
@@ -150,10 +116,8 @@ func (c *ClientHandler) GetClient(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	client, err = c.ClientStore.FetchClient(id, ctx)
-
 	if err != nil {
-
-		http.Error(w, "Error al buscar cliente", http.StatusNotFound)
+		http.Error(w, "cliente no encontrado", http.StatusNotFound)
 	}
 
 	writeJSONResponse(w, http.StatusOK, client)
@@ -165,36 +129,38 @@ func (c *ClientHandler) GetClients(w http.ResponseWriter, r *http.Request) {
 	client := &models.Client{}
 	clients := []*models.Client{}
 
-	ctx := r.Context()
-
-	err := json.NewDecoder(r.Body).Decode(client)
-
-	if err != nil {
-
-		http.Error(w, "Data ingresada no es valida", http.StatusBadRequest)
-
+	if r.URL.Query().Get("email") != "" {
+		client.Email = r.URL.Query().Get("email")
+	} else if r.URL.Query().Get("name") != "" {
+		client.Name = r.URL.Query().Get("name")
+	} else if r.URL.Query().Get("phone") != "" {
+		client.Phone = r.URL.Query().Get("phone")
+	} else {
+		fmt.Println("Parametros de busqueda vacios")
+		return
 	}
 
-	err = validateClients(client)
-
+	ctx := r.Context()
+	err := validateClients(client)
 	if err != nil {
-
 		http.Error(w, err.Error(), http.StatusBadRequest)
-
 	}
 
 	clients, err = c.ClientStore.FetchClients(client, ctx)
-
 	if err != nil {
-
 		http.Error(w, "Error al buscar cliente", http.StatusNotFound)
-
 	}
 
+	if len(clients) == 0 {
+		w.WriteHeader(http.StatusNotFound) // Código 404
+		w.Write([]byte(`{"Cliente no encontrado"}`))
+		return
+	}
+
+	fmt.Println("flag")
+
 	w.Header().Set("Content-type", "application/json")
-
 	w.WriteHeader(http.StatusOK)
-
 	json.NewEncoder(w).Encode(clients)
 }
 
@@ -202,50 +168,50 @@ func (c *ClientHandler) UpdateClients(w http.ResponseWriter, r *http.Request) {
 
 	clientInfo := &models.Client{}
 
-	err := json.NewDecoder(r.Body).Decode(clientInfo)
-
+	cid := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(cid)
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-		http.Error(w, "Data ingresada no es valida", http.StatusBadRequest)
-
+	err = json.NewDecoder(r.Body).Decode(clientInfo)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	err = validateClient(clientInfo)
-
 	if err != nil {
-
 		http.Error(w, err.Error(), http.StatusBadRequest)
-
+		return
 	}
 
+	clientInfo.ID = id
 	clientInfo, err = c.ClientStore.UpdateClient(clientInfo)
-
 	if err != nil {
-
-		http.Error(w, "Error al actualizar cliente", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
+	fmt.Println("Cliente actualizado exitosamente")
 
 	writeJSONResponse(w, http.StatusOK, clientInfo)
 }
 
 func (c *ClientHandler) DeleteClient(w http.ResponseWriter, r *http.Request) {
-
 	cid := chi.URLParam(r, "id")
-
 	id, err := strconv.Atoi(cid)
-
 	if err != nil {
-
 		http.Error(w, "id no valido", http.StatusBadRequest)
-
 	}
 
 	err = c.ClientStore.DeleteClient(id)
-
 	if err != nil {
-
 		http.Error(w, "error eliminando cliente", http.StatusBadRequest)
-
 	}
+
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"cliente eliminado satisfactoriamente"}`))
 
 }

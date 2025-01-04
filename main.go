@@ -97,15 +97,16 @@ func main() {
 			r.Put("/{id}", tasksHandler.HandlePutTask)
 		})
 
-		r.Route("/client", func(r chi.Router) {
+	})
 
-			r.Get("/{id}", clientHandler.GetClient)
-			r.Get("/", clientHandler.GetClients)
-			r.Post("/", clientHandler.CreateNewClient)
-			r.Delete("/{id}", clientHandler.DeleteClient)
-			r.Put("/", clientHandler.UpdateClients)
+	r.Route("/client", func(r chi.Router) {
 
-		})
+		r.Get("/{id}", clientHandler.GetClient)
+		r.Get("/", clientHandler.GetClients)
+		r.Post("/", clientHandler.CreateNewClient)
+		r.Delete("/{id}", clientHandler.DeleteClient)
+		r.Put("/{id}", clientHandler.UpdateClients)
+
 	})
 
 	// This is a json route and is not intended to be used by the browser

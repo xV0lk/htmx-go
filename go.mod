@@ -3,7 +3,7 @@ module github.com/xV0lk/htmx-go
 go 1.21.5
 
 require (
-	github.com/a-h/templ v0.2.663
+	github.com/a-h/templ v0.2.793
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/go-chi/render v1.0.3
 	github.com/gorilla/csrf v1.7.2
@@ -34,5 +34,5 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/sync v0.5.0 // indirect
+	golang.org/x/sync v0.8.0 // indirect
 )
