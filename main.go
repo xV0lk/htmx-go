@@ -61,11 +61,13 @@ func main() {
 		pwResetStore = db.NewPsPwResetStore(psqlStore)
 		userStore    = db.NewUserStore(authStore, sessionStore, pwResetStore)
 		clientStore  = db.NewPsclientStore(psqlStore)
+		studiostore  = db.NewPsstudiosstore(psqlStore)
 
 		// handlers
 		tasksHandler  = api.NewTasksHandler(taskStore, decoder)
 		authHandler   = api.NewAuthHandler(userStore, decoder, emailService)
 		clientHandler = api.Newclienthandler(clientStore, decoder)
+		studiohandler = api.Newstudiohandler(studiostore, decoder)
 		// Connection
 		r = chi.NewRouter()
 	)
@@ -106,6 +108,16 @@ func main() {
 		r.Post("/", clientHandler.CreateNewClient)
 		r.Delete("/{id}", clientHandler.DeleteClient)
 		r.Put("/{id}", clientHandler.UpdateClients)
+
+	})
+
+	r.Route("/studio", func(r chi.Router) {
+
+		r.Get("/{id}", studiohandler.Fetchstudio)
+		r.Get("/", studiohandler.Fetchstudios)
+		r.Post("/", studiohandler.Createnewstudio)
+		r.Delete("/{id}", studiohandler.Deletestudio)
+		r.Put("/{id}", studiohandler.Updatestudio)
 
 	})
 
