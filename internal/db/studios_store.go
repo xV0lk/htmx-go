@@ -32,8 +32,8 @@ type Studiostore interface {
 func (s *Psstudiosstore) Createstudio(studio *models.Studio, ctx context.Context) error {
 
 	query := `INSERT INTO studios (name, address, email, cut)
-	VALUES ($1, $2, $3, $4)`
-	_, err := s.db.Exec(ctx, query, studio.Name, studio.Address, studio.Email, studio.Cut)
+	VALUES ($1, $2, $3, $4) RETURNING id`
+	err := s.db.QueryRow(ctx, query, studio.Name, studio.Address, studio.Email, studio.Cut).Scan(&studio.ID)
 	if err != nil {
 		return fmt.Errorf("error al crear estudio: %v", err.Error())
 	}
