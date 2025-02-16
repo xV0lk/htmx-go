@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -54,25 +55,38 @@ func (s *Psstudiosstore) Fetchstudio(id int, ctx context.Context) (*models.Studi
 
 func (s *Psstudiosstore) Fetchstudios(studio *models.Studio, ctx context.Context) ([]*models.Studio, error) {
 
+	params := []interface{}{}
+	paramCount := 1
+	conditions := []string{}
 	studios := []*models.Studio{}
-	var query string
-	var param string
 
 	if studio.Name != "" {
-		query = `SELECT * FROM studios WHERE name = $1`
-		param = studio.Name
-	} else if studio.Email != "" {
-		query = `SELECT * FROM studios WHERE email = $1`
-		param = studio.Email
-	} else if studio.Address != "" {
-		query = `SELECT * FROM studios WHERE address = $1`
-		param = studio.Address
-	} else {
+		conditions = append(conditions, fmt.Sprintf("name ILIKE $%d", paramCount))
+		params = append(params, "%"+studio.Name+"%")
+		paramCount++
+	}
+	if studio.Email != "" {
+		conditions = append(conditions, fmt.Sprintf("email ILIKE $%d", paramCount))
+		params = append(params, "%"+studio.Email+"%")
+		paramCount++
+	}
+	if studio.Address != "" {
+		conditions = append(conditions, fmt.Sprintf("address ILIKE $%d", paramCount))
+		params = append(params, "%"+studio.Address+"%")
+		paramCount++
+	}
+	if paramCount == 1 {
 		fmt.Println("No hay parametros de busqueda")
 		return studios, nil
 	}
 
-	rows, err := s.db.Query(ctx, query, param)
+	//assembling query
+	query := `SELECT * FROM studios`
+	if len(params) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+	//Executing query
+	rows, err := s.db.Query(ctx, query, params...)
 	fmt.Println(studio)
 	fmt.Println(rows)
 	if err != nil {
@@ -82,6 +96,7 @@ func (s *Psstudiosstore) Fetchstudios(studio *models.Studio, ctx context.Context
 
 	defer rows.Close()
 
+	// scaning rows into studios slice
 	studios, err = pgx.CollectRows(rows, pgx.RowToAddrOfStructByNameLax[models.Studio])
 	if err != nil {
 		fmt.Errorf("error %v", err.Error())

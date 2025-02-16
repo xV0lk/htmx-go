@@ -93,22 +93,30 @@ func (s *Studiohandler) Fetchstudios(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	studio := &models.Studio{}
 	studios := []*models.Studio{}
+	temp := false
 
+	if r.URL.Query().Get("name") != "" {
+		studio.Name = r.URL.Query().Get("name")
+		temp = true
+	}
 	if r.URL.Query().Get("email") != "" {
 		studio.Email = r.URL.Query().Get("email")
 		if !strings.ContainsAny(studio.Email, "@") {
 			http.Error(w, "ingrese un email valido", http.StatusBadRequest)
 			return
 		}
-	} else if r.URL.Query().Get("address") != "" {
+		temp = true
+	}
+	if r.URL.Query().Get("address") != "" {
 		studio.Address = r.URL.Query().Get("address")
-	} else {
+		temp = true
+	}
+	if !temp {
 		http.Error(w, "no existen datos para realizar busqueda", http.StatusBadRequest)
 		return
 	}
 
 	studios, err := s.studiostore.Fetchstudios(studio, ctx)
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
@@ -116,7 +124,6 @@ func (s *Studiohandler) Fetchstudios(w http.ResponseWriter, r *http.Request) {
 	if len(studios) == 0 {
 		http.Error(w, "estudio no encontrado", http.StatusBadRequest)
 		return
-
 	}
 
 	w.Header().Set("content-type", "application/json")
