@@ -60,9 +60,14 @@ func main() {
 		sessionStore = db.NewPsSessionStore(psqlStore)
 		pwResetStore = db.NewPsPwResetStore(psqlStore)
 		userStore    = db.NewUserStore(authStore, sessionStore, pwResetStore)
+		clientStore  = db.NewPsclientStore(psqlStore)
+		studiostore  = db.NewPsstudiosstore(psqlStore)
+
 		// handlers
-		tasksHandler = api.NewTasksHandler(taskStore, decoder)
-		authHandler  = api.NewAuthHandler(userStore, decoder, emailService)
+		tasksHandler  = api.NewTasksHandler(taskStore, decoder)
+		authHandler   = api.NewAuthHandler(userStore, decoder, emailService)
+		clientHandler = api.Newclienthandler(clientStore, decoder)
+		studiohandler = api.Newstudiohandler(studiostore, decoder)
 		// Connection
 		r = chi.NewRouter()
 	)
@@ -93,6 +98,27 @@ func main() {
 			r.Get("/{id}/edit", tasksHandler.HandleEditTask)
 			r.Put("/{id}", tasksHandler.HandlePutTask)
 		})
+
+	})
+
+	r.Route("/client", func(r chi.Router) {
+
+		r.Get("/{id}", clientHandler.GetClient)
+		r.Get("/", clientHandler.GetClients)
+		r.Post("/", clientHandler.CreateNewClient)
+		r.Delete("/{id}", clientHandler.DeleteClient)
+		r.Put("/{id}", clientHandler.UpdateClients)
+
+	})
+
+	r.Route("/studio", func(r chi.Router) {
+
+		r.Get("/{id}", studiohandler.Fetchstudio)
+		r.Get("/", studiohandler.Fetchstudios)
+		r.Post("/", studiohandler.Createnewstudio)
+		r.Delete("/{id}", studiohandler.Deletestudio)
+		r.Put("/{id}", studiohandler.Updatestudio)
+
 	})
 
 	// This is a json route and is not intended to be used by the browser

@@ -7,6 +7,9 @@ CREATE TABLE
         phone VARCHAR(15) NOT NULL,
         email TEXT NOT NULL,
         notifications BOOLEAN NOT NULL DEFAULT TRUE,
+        studio_id INT NOT NULL REFERENCES studios(id) ON DELETE NO ACTION
+      
+
     );
 
 -- +goose StatementEnd
